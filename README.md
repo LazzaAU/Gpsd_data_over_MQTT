@@ -38,16 +38,21 @@ Use the command "cat /home/pi/crontasks.log" to view the contents of the log fil
 ```
 nano /home/pi/gpsdata.py
 ```
-- Line 18 says "configure these". so in the block of code below that add your MQTT broker address, username/password if required and port. NOTE: if you dont use mqtt username and passsword the comment both thos lines with a # in the front of them.
-- Change or leave caravan_gps_receiver as the value for "deviceName" to suit your needs. but remeber what you used for later. 
+- Line 18 says "configure these". So in the block of code below that,
+  - add your MQTT broker address,
+  -  username/password if required
+  -  and change the port if required. 
+ 
+ **NOTE**: If you don't use mqtt username and passsword then comment both those lines with a # in the front of each of them.
+  - Change (or leave "caravan_gps_receiver") as the value for "deviceName" to suit your needs. but remember what you used for later HA configuration. 
 
-**TIP** - Throughout the code, Lines starting with # are comments to assist working out what the relevant code does.
+**TIP** - `Throughout the code, Lines starting with # are comments to assist working out what the relevant code does.`
 
 **TIP #2**: 
-Print messages in this code won't display during a cron task. To see print messages run this file manually from the command
- line. EG: `python3 gpsdata.py`
+`Print messages in this code won't display during a cron task. To see print messages run this file manually from the command
+ line`. EG: `python3 gpsdata.py`
 
-## Home Assistant set up in configuration.yaml ##
+## Home Assistant set up in the configuration.yaml ##
 - Add the below to your configuration.yaml (home assistant versions 2022.6.9 ? and upwards )
 
 mqtt:
@@ -57,11 +62,12 @@ mqtt:
       json_attributes_topic: "homeassistant/caravan_gps_receiver/attributes"
       json_attributes_template: "{{ value_json | tojson}}"
 
-**NOTE** - Obviously change caravan_gps_receiver to the same topic name you choose whenadding a name for "deviceName" in the code".  
+**NOTE** - Obviously change caravan_gps_receiver to the same topic name you choose when adding a name for "deviceName" in the code" and also change the "name" vale to what ever you want to call the device tracker.  
+
 - restart HA after editing the file
 
 ## Home Assistant Automation ##
-Create a automation that triggers from a MQTT topic of "homeassistant/`your_device_name`/attributes". Once triggered use the set.location service
+Now create a automation that triggers from a MQTT topic of "homeassistant/`your_device_name`/attributes". Once triggered use the set.location service
  as the action, as per below example.
 
  ```
@@ -94,3 +100,12 @@ by changing */1 in the above line to */15 or read the crontab file to see what t
 
 Hope that helps 
 Enjoy
+
+**Final tips**
+
+- View the cron logs by typing ```/home/pi/crontasks.log``` in the terminal. The logs are nothing special, however they do let you know if its running as scheduled.
+- View error logs by typing ```journalctl``` in the terminal
+- Run the gps code manually with ```python3 /home/pi/gpsdata.py``` this is actually handy sometimes to also check for errors. and/or see the gpsd payload and log file size via print statements
+- Line 38 lets you change log file size limits (in MB)
+- Line 34 - logPayload - False
+ - Set this value to `True` to have the raw data from gpsd stored in the log file for later reference 

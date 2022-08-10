@@ -112,4 +112,4 @@ Enjoy
 - Run the gps code manually with ```python3 /home/pi/gpsdata.py``` this is actually handy sometimes to also check for errors. and/or see the gpsd payload and log file size via print statements
 - Line 38 lets you change log file size limits (in MB)
 - Line 34 - logPayload - False
- - Set this value to `True` to have the raw data from gpsd stored in the log file for later reference 
+  - Set this value to `True` to have the raw data from gpsd stored in the log file for later reference 

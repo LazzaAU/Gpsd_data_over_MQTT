@@ -64,7 +64,7 @@ mqtt:
       json_attributes_template: "{{ value_json | tojson}}"
 ```
 
-**NOTE** - Obviously change caravan_gps_receiver to the same topic name you choose when adding a name for "deviceName" in the code" and also change the "name" vale to what ever you want to call the device tracker.  
+**NOTE** - Obviously change caravan_gps_receiver to the same topic name you choose when adding a name for "deviceName" in the code" and also change the "name:" value to what ever you want to call the device tracker.  
 
 - restart HA after editing the file
 

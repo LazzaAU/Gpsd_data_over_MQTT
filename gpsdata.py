@@ -142,7 +142,7 @@ def cronLogging(message):
 # This returns the timestamp to be used at the start of the log message
 def processTime():
     now = datetime.now()
-    currentTime = now.strftime("%H:%M:%S")
+    currentTime = now.strftime("%c")
     return currentTime
 
 # function that returns size of a file

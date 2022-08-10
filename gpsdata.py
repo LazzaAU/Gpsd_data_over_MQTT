@@ -38,7 +38,7 @@ mqtt:
       json_attributes_topic: "homeassistant/caravan_gps_dongle/attributes"
       json_attributes_template: "{{ value_json | tojson}}"
       
-* NOTE - Obviously change caravan_gps_dongle to the same topic name you used in the below "configTopic" and "attrTopic". 
+* NOTE - Obviously change caravan_gps_dongle to the same topic name you used in the below "devicename". 
 and restart HA after editing the file
 
 *** Home Assistant Automation ***

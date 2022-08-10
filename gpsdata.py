@@ -9,12 +9,12 @@ from gpsdclient import GPSDClient
 
 """
 *** Hardware Setup ***
-1. 2 Raspberry pi's, one with Home Assistant running on it, second one has the GPS dongle attached
-2. GPS dongle
-3. On the RPI with the gps dongle attached, install gpsd and gpsdclient
+1. 2 Raspberry pi's, one with Home Assistant running on it, second one has the GPS receiver attached
+2. GPS receiver
+3. On the RPI with the gps receiver attached, install gpsd and gpsdclient
 
 *** Functionailty ***
-This code will listen for events from a GPSD client (in my case a GPS dongle plugged into raspberry pi 3b+)
+This code will listen for events from a GPSD client (in my case a GPS receiver plugged into raspberry pi 3b+)
 It will then send the latitude and longitude coordinates along with some other gps data to 
 home assistant via MQTT which is on my seperate raspberry pi 4.
 
@@ -33,18 +33,18 @@ Print messages in this code won't display during a cron task. To see print messa
 *** Home Assistant set up in configuration.yaml ***
 mqtt:
   device_tracker:
-    - name: "Caravan GPS Dongle"
-      state_topic: "homeassistant/caravan_gps_dongle/state"
-      json_attributes_topic: "homeassistant/caravan_gps_dongle/attributes"
+    - name: "Caravan GPS receiver"
+      state_topic: "homeassistant/caravan_gps_receiver/state"
+      json_attributes_topic: "homeassistant/caravan_gps_receiver/attributes"
       json_attributes_template: "{{ value_json | tojson}}"
-      
-* NOTE - Obviously change caravan_gps_dongle to the same topic name you used in the below "devicename". 
+
+* NOTE - Obviously change caravan_gps_receiver to the same topic name you used in the below "configTopic" and "attrTopic". 
 and restart HA after editing the file
 
 *** Home Assistant Automation ***
 Create a automation that triggers on a MQTT topic of "homeassistant/your_device_name/attributes". Once triggered use the set.location service
  as the action, as per below example.
- 
+
  service: homeassistant.set_location
 data_template:
   latitude: "{{ states.device_tracker.your_device_name.attributes.latitude }}"
@@ -52,7 +52,7 @@ data_template:
 
 *** Lastly, create the Cron task ***
 
-In the terminal of the RPI with the dongle attached. type "crontab -e" and push enter.
+In the terminal of the RPI with the receiver attached. type "crontab -e" and push enter.
 at the end of the file that opens add...
 
 */1 * * * * /usr/bin/python3 /home/pi/gpsdata.py
@@ -60,6 +60,9 @@ at the end of the file that opens add...
 then save the file and the cron task will run. (in this case every minute). However, you can change it to every 15 minutes or what ever
 for example by changing 
 */1 in the above line to */15 or read the crontab file to see what to change for various days months, hours etc
+
+Last NOTE: Log file will get deleted at 50MB and start again. That way the log file won't get infinately big 
+and use up un nessasary storage space 
 """
 
 # todo - Change the below configureable items to suit your MQTT details.
@@ -67,9 +70,9 @@ for example by changing
 ## Configure these
 mqttBroker = '192.168.1.44'
 mqttPort = 1883
-mqttUsername = 'your MQTT username'
-mqttPassword = 'your MQTT password'
-deviceName = 'caravan_gps_dongle'
+mqttUsername = 'Your MQTT Username'
+mqttPassword = 'Your MQTT password'
+deviceName = 'caravan_gps_receiver'
 ## configuration end
 
 # The MQTT topics, no need to modify
@@ -84,6 +87,7 @@ logPayload = False # Change this to True if you want to see the raw gpsd data in
 
 # The path to the log file
 filePath = '/home/pi/crontasks.log'
+logSizeLimit = 50 # Sets the log file sizelimit in MB
 
 # MQTT Connection method
 def connect_mqtt():
@@ -109,7 +113,7 @@ def publish(client):
         # One of two messages that get sent to HA. This is the config payload and in general won't need modifying
         configPayload = {
             'state_topic': f"{mqttTopic}/state",
-            "name": "GPS Dongle",
+            "name": "GPS receiver",
             "payload_home": "home",
             "payload_not_home": "not_home",
             "json_attributes_topic": f"{mqttTopic}/attributes"
@@ -156,7 +160,7 @@ def getGpsdData():
         # TPV class is where you longitude and latitude data is in the gpsd output
         if result["class"] == "TPV":
 
-            # This gpsPayload is data you want sent to HA. replace/add/remove fields as required based on the output of your dongle
+            # This gpsPayload is data you want sent to HA. replace/add/remove fields as required based on the output of your receiver
             # format is :
             # 'the name of the data field' : result["the name associated with the value that gpsd ouputs "]
             # my gpsd example output = {'class': 'TPV', 'device': '/dev/ttyACM0', 'status': 2, 'mode': 2, 'time': datetime.datetime(2022, 8, 10, 1, 38, 2), 'ept': 0.005, 'lat': -xx.351406667, 'lon': xxx.5549935, 'epx': 2.387, 'epy': 2.7, 'track': 0.0, 'speed': 0.09, 'eps': 5.4}
@@ -179,6 +183,10 @@ def getGpsdData():
 # Below creates log messages in a file called crontasks.log when a successful or failed cron job is completed
 def cronLogging(message):
     currentTime = processTime()
+
+    # check if log file is below 50mb, if not delete it and start fresh
+    checkLogFileSize()
+
     mode = 'a' if os.path.exists(filePath) else 'w'
     with open(filePath, mode) as file:
         file.write(f'{currentTime} - {message} \n')
@@ -188,6 +196,58 @@ def processTime():
     now = datetime.now()
     currentTime = now.strftime("%H:%M:%S")
     return currentTime
+
+# function that returns size of a file
+def getFileSize(path):
+
+    # getting file size in bytes
+    actualFileSize = os.path.getsize(path)
+
+    # returning the size of the file
+    return actualFileSize
+
+
+# function to delete a file
+def removeLogFile(path):
+
+    # deleting the log file
+    if not os.remove(path):
+
+        # success
+        print(f"{path} is now deleted successfully due to exceeding file size limit of {logSizeLimit} ")
+
+    else:
+
+        # error
+        print(f"Unable to delete {path}")
+
+
+def checkLogFileSize():
+
+
+    # checking whether the path exists or not
+    if os.path.exists(filePath):
+
+        # converting size to bytes
+        limitSizeInBytes = logSizeLimit * 1024 * 1024
+
+
+        # checking the filesize
+        if getFileSize(filePath) >= limitSizeInBytes:
+            # invoking the remove_file function
+            removeLogFile(filePath)
+
+        else:
+            fileSizeInMB = getFileSize(filePath) / 1024 / 1024
+            print("")
+            print("Log file is still small enough to evade deletion")
+            print(f"Actual size is {fileSizeInMB} MB ")
+            print(f"Limit is {logSizeLimit} MB ")
+
+    else:
+        # path doesn't exist
+        print(f"{filePath} doesn't exist")
+
 
 def run():
     client = connect_mqtt()

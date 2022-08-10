@@ -50,12 +50,12 @@ nano /home/pi/gpsdata.py
 
 **TIP #2**: 
 `Print messages in this code won't display during a cron task. To see print messages run this file manually from the command
- line`. EG: `python3 gpsdata.py`
+ line`. EG: ```python3 gpsdata.py```
 
 ## Home Assistant set up in the configuration.yaml ##
 - Add the below to your configuration.yaml (home assistant versions 2022.6.9 ? and upwards )
 
-mqtt:
+>mqtt:
   device_tracker:
     - name: "Caravan GPS receiver"
       state_topic: "homeassistant/caravan_gps_receiver/state"

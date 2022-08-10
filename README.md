@@ -1,9 +1,9 @@
-Gpsd_data_over_MQTT
+Gpsd data over MQTT
 
-This file is used to grab GPSD data from one raspberry pi and send it to Home Assistant on another RPI via MQTT.
+This purpose of this code is to send GPSD data from one Raspberry PI (RPI) and send it to Home Assistant on another RPI via MQTT.
 
 
-*** Hardware Setup ***
+## Hardware Setup ##
 
 1. 2 Raspberry pi's, one with Home Assistant running on it, second one has the GPS receiver attached
 2. GPS receiver

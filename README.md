@@ -52,21 +52,25 @@ nano /home/pi/gpsdata.py
 `Print messages in this code won't display during a cron task. To see print messages run this file manually from the command
  line`. EG: ```python3 gpsdata.py```
 
+
 ## Home Assistant set up in the configuration.yaml ##
 - Add the below to your configuration.yaml (home assistant versions 2022.6.9 ? and upwards )
-
->mqtt:
+```
+mqtt:
   device_tracker:
     - name: "Caravan GPS receiver"
       state_topic: "homeassistant/caravan_gps_receiver/state"
       json_attributes_topic: "homeassistant/caravan_gps_receiver/attributes"
       json_attributes_template: "{{ value_json | tojson}}"
+```
 
 **NOTE** - Obviously change caravan_gps_receiver to the same topic name you choose when adding a name for "deviceName" in the code" and also change the "name" vale to what ever you want to call the device tracker.  
 
 - restart HA after editing the file
 
+
 ## Home Assistant Automation ##
+
 Now create a automation that triggers from a MQTT topic of "homeassistant/`your_device_name`/attributes". Once triggered use the set.location service
  as the action, as per below example.
 

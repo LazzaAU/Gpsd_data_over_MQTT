@@ -28,10 +28,7 @@ Use the command "cat /home/pi/crontasks.log" to view the contents of the log fil
  sudo apt-get update
  ```
  ```
- sudo apt install gpsd
- ```
- ```
- sudo apt install gpsdclient
+ sudo apt install gpsd gpsd-clients
  ```
  
  - Open the gpsdata.py file
